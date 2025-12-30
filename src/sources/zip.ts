@@ -2,11 +2,15 @@ import AdmZip from 'adm-zip';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import type { CLIOptions, SourceType } from '../types.js';
 import { processDirectory } from '../processors/file.js';
 import { buildTree } from '../processors/tree.js';
 import { estimateTokens } from '../output/tokenizer.js';
 import { createProcessingResult, formatOutput } from '../output/formatter.js';
+
+const execAsync = promisify(exec);
 
 /**
  * Check if a path is a zip file
@@ -16,14 +20,38 @@ export function isZipFile(inputPath: string): boolean {
 }
 
 /**
+ * Extract zip file using native unzip command (fallback)
+ */
+async function extractWithNativeUnzip(zipPath: string, tempDir: string): Promise<void> {
+  await execAsync(`unzip -q -o "${zipPath}" -d "${tempDir}"`);
+}
+
+/**
  * Extract zip file to a temporary directory
  */
 async function extractZip(zipPath: string): Promise<string> {
   const tempDir = path.join(os.tmpdir(), `zipingest-${Date.now()}`);
   await fs.mkdir(tempDir, { recursive: true });
 
-  const zip = new AdmZip(zipPath);
-  zip.extractAllTo(tempDir, true);
+  // Verify file exists first
+  try {
+    await fs.access(zipPath);
+  } catch {
+    throw new Error(`Zip file not found: ${zipPath}`);
+  }
+
+  // Try adm-zip first, fallback to native unzip
+  try {
+    const zip = new AdmZip(zipPath);
+    zip.extractAllTo(tempDir, true);
+  } catch (admZipError) {
+    // Fallback to native unzip command
+    try {
+      await extractWithNativeUnzip(zipPath, tempDir);
+    } catch (nativeError) {
+      throw new Error(`Failed to extract zip: ${admZipError instanceof Error ? admZipError.message : 'Unknown error'}`);
+    }
+  }
 
   return tempDir;
 }
