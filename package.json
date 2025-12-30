@@ -1,0 +1,47 @@
+{
+  "name": "zipingest",
+  "version": "1.0.0",
+  "description": "Transform sources (zip, directories, Git repos, URLs) into LLM-friendly markdown digests",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "zipingest": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "cli",
+    "zip",
+    "markdown",
+    "llm",
+    "git",
+    "ingest",
+    "digest"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "chalk": "^5.3.0",
+    "clipboardy": "^4.0.0",
+    "commander": "^12.1.0",
+    "gpt-tokenizer": "^2.8.1",
+    "inquirer": "^12.3.2",
+    "minimatch": "^10.0.1",
+    "ora": "^8.1.1",
+    "simple-git": "^3.27.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
